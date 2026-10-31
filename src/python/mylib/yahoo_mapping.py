@@ -5,7 +5,8 @@ from __future__ import annotations
 import math
 from datetime import date, datetime
 from numbers import Number
-from typing import Any
+from typing import Any, Callable
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import pandas as pd
 
@@ -121,7 +122,34 @@ def profile_record(symbol: str, info: dict[str, Any]) -> dict[str, Any]:
     return record
 
 
-def history_records(frame: pd.DataFrame, symbol: str, currency: str | None = None, fx_currency: str | None = None) -> list[dict[str, Any]]:
+def live_close_from_info(info: dict[str, Any]) -> tuple[date, float] | None:
+    """Return (session date, price) from a Yahoo quote, only once the market is closed."""
+    if info.get("marketState") != "CLOSED":
+        return None
+    price = clean_value(info.get("regularMarketPrice"))
+    timestamp = clean_value(info.get("regularMarketTime"))
+    timezone_name = info.get("exchangeTimezoneName")
+    if price is None or timestamp is None or not timezone_name or price <= 0:
+        return None
+    try:
+        session = datetime.fromtimestamp(timestamp, ZoneInfo(timezone_name)).date()
+    except (ValueError, OverflowError, OSError, ZoneInfoNotFoundError):
+        return None
+    return session, float(price)
+
+
+def history_records(
+    frame: pd.DataFrame,
+    symbol: str,
+    currency: str | None = None,
+    fx_currency: str | None = None,
+    live_close: Callable[[], tuple[date, float] | None] | None = None,
+) -> list[dict[str, Any]]:
+    """Map a Yahoo history frame to raw rows, skipping rows without a close.
+
+    If the newest row has no close, ``live_close`` is consulted lazily; its price is used
+    only when its session date equals that row's date.
+    """
     if frame is None or frame.empty:
         return []
     if isinstance(frame.columns, pd.MultiIndex):
@@ -143,7 +171,8 @@ def history_records(frame: pd.DataFrame, symbol: str, currency: str | None = Non
         "stock splits": "stockSplit",
     }
     output = []
-    for observation_time, values in frame.iterrows():
+    last_position = len(frame) - 1
+    for position, (observation_time, values) in enumerate(frame.iterrows()):
         record: dict[str, Any] = {"symbol": fx_currency or symbol, "date": clean_value(observation_time)}
         if fx_currency:
             record["currency"] = "EUR"
@@ -154,6 +183,10 @@ def history_records(frame: pd.DataFrame, symbol: str, currency: str | None = Non
             if destination:
                 record[destination] = clean_value(value)
         record = {key: value for key, value in record.items() if value is not None}
+        if record.get("close") is None and live_close is not None and position == last_position:
+            live = live_close()
+            if live is not None and live[0] == record.get("date"):
+                record["close"] = live[1]
         if record.get("close") is not None:
             output.append(record)
     return output

@@ -3,7 +3,7 @@
 from datetime import date, timedelta
 
 from mylib.yahoo_mapping import history_records
-from mylib.worker_common import fetch, run_worker
+from mylib.worker_common import fetch, live_close_provider, run_worker
 
 
 def _history_request(service, symbol, row, config, logger, throttle):
@@ -24,7 +24,12 @@ def update(config, logger, throttle, service, database, worker_args):
             if result.status != "success":
                 logger.info("No price history for %s (%s); leaving backfill flag unchanged", symbol, result.status)
                 continue
-            records = history_records(result.data, str(symbol), row.get("currency"))
+            records = history_records(
+                result.data,
+                str(symbol),
+                row.get("currency"),
+                live_close=live_close_provider(str(symbol), config, logger, throttle, service),
+            )
             written = database.upsert("quote", records)
             if row.get("longTimeSerie") and written:
                 database.update_reference_flag("reference_map", "symbol", symbol, "longTimeSerie", False)

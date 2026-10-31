@@ -9,6 +9,7 @@ from typing import Any, Callable
 from mylib.config import load_config, resolve_path
 from mylib.write_log import create_logger
 from mylib.yahoo_db import Database
+from mylib.yahoo_mapping import live_close_from_info
 from mylib.yahoo_service import FetchResult, YahooService
 from mylib.yahoo_throttle import YahooThrottle, call_with_retry
 
@@ -39,6 +40,26 @@ def fetch(operation: Callable[[], FetchResult], config: dict[str, Any], logger, 
     if result.status == "permanent_error":
         logger.warning("Yahoo returned a permanent error: %s", result.error)
     return result
+
+
+def live_close_provider(symbol: str, config: dict[str, Any], logger, throttle: YahooThrottle, service: YahooService, info: dict[str, Any] | None = None):
+    """Build a lazy fallback for a missing latest close; lookup failures yield no fallback."""
+
+    def provide():
+        try:
+            quote = info
+            if quote is None:
+                result = fetch(lambda: service.profile(symbol), config, logger, throttle)
+                quote = result.data if result.status == "success" else None
+            live = live_close_from_info(quote) if quote else None
+        except Exception:
+            logger.warning("Live quote lookup failed for %s; leaving latest close missing", symbol, exc_info=True)
+            return None
+        if live is not None:
+            logger.info("Yahoo daily close missing for %s on %s; using live quote %s as provisional close", symbol, live[0], live[1])
+        return live
+
+    return provide
 
 
 def select_fundamental_symbols(reference_rows: list[dict[str, Any]], update_all: bool) -> list[str]:

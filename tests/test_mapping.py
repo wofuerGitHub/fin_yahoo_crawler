@@ -1,6 +1,6 @@
 import pandas as pd
 
-from mylib.yahoo_mapping import history_records, statement_records
+from mylib.yahoo_mapping import history_records, live_close_from_info, statement_records
 
 
 def test_statement_mapping_preserves_zero_negative_and_missing_currency():
@@ -37,3 +37,48 @@ def test_price_mapping_skips_only_rows_without_close():
         pd.Timestamp("2024-01-04").date(),
     ]
     assert [record["close"] for record in records] == [10.5, 12.5]
+
+def _frame_with_missing_latest_close():
+    return pd.DataFrame(
+        {"Open": [10.0, 11.0], "Close": [10.5, float("nan")]},
+        index=pd.date_range("2024-01-02", periods=2),
+    )
+
+
+def test_missing_latest_close_uses_live_quote_for_same_session():
+    live = (pd.Timestamp("2024-01-03").date(), 11.4)
+
+    records = history_records(_frame_with_missing_latest_close(), "ABC", live_close=lambda: live)
+
+    assert [record["close"] for record in records] == [10.5, 11.4]
+
+
+def test_live_quote_ignored_for_other_session_and_older_rows():
+    frame = pd.DataFrame(
+        {"Open": [10.0, 11.0], "Close": [float("nan"), 11.5]},
+        index=pd.date_range("2024-01-02", periods=2),
+    )
+    stale = (pd.Timestamp("2024-01-02").date(), 99.0)
+
+    assert [r["close"] for r in history_records(frame, "ABC", live_close=lambda: stale)] == [11.5]
+    other = (pd.Timestamp("2024-01-05").date(), 99.0)
+    assert [r["close"] for r in history_records(_frame_with_missing_latest_close(), "ABC", live_close=lambda: other)] == [10.5]
+
+
+def test_live_quote_not_requested_when_close_present():
+    frame = pd.DataFrame({"Close": [10.5]}, index=[pd.Timestamp("2024-01-02")])
+
+    def fail():
+        raise AssertionError("live quote must not be fetched")
+
+    assert len(history_records(frame, "ABC", live_close=fail)) == 1
+
+
+def test_live_close_from_info_requires_closed_market():
+    info = {"marketState": "CLOSED", "regularMarketPrice": 57.8, "regularMarketTime": 1793378163, "exchangeTimezoneName": "Europe/Berlin"}
+
+    assert live_close_from_info(info) == (pd.Timestamp("2026-10-30").date(), 57.8)
+    assert live_close_from_info({**info, "marketState": "REGULAR"}) is None
+    assert live_close_from_info({**info, "regularMarketPrice": None}) is None
+    assert live_close_from_info({**info, "regularMarketPrice": 0}) is None
+    assert live_close_from_info({**info, "exchangeTimezoneName": "Nowhere/Land"}) is None

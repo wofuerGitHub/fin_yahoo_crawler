@@ -1,7 +1,7 @@
 """Poll reference rows marked for quote/FX updates; this is not a live feed."""
 
 from mylib.yahoo_mapping import clean_value, history_records
-from mylib.worker_common import fetch, run_worker
+from mylib.worker_common import fetch, live_close_provider, run_worker
 
 
 def update(config, logger, throttle, service, database, worker_args):
@@ -15,11 +15,17 @@ def update(config, logger, throttle, service, database, worker_args):
                 logger.info("No quote snapshot for %s (%s)", symbol, history_result.status)
                 continue
             info_result = fetch(lambda: service.profile(str(symbol)), config, logger, throttle)
-            records = history_records(history_result.data, str(symbol), row.get("currency"))
+            info = info_result.data if info_result.status == "success" else None
+            records = history_records(
+                history_result.data,
+                str(symbol),
+                row.get("currency"),
+                live_close=live_close_provider(str(symbol), config, logger, throttle, service, info=info or {}),
+            )
             if not records:
                 continue
             snapshot = records[-1]
-            snapshot["eps"] = clean_value(info_result.data.get("trailingEps")) if info_result.status == "success" else None
+            snapshot["eps"] = clean_value(info.get("trailingEps")) if info else None
             logger.info("Quote snapshot %s: stored %s row(s)", symbol, database.upsert("quote_eps", [snapshot]))
         except Exception:
             logger.exception("Quote polling failed for %s", symbol)
