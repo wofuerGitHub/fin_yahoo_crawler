@@ -14,6 +14,9 @@
         "income": "raw_fun_income",
         "cashflow": "raw_fun_cashflow",
         "balance": "raw_fun_balance",
+        "income_2": "raw_fun_income_2",
+        "cashflow_2": "raw_fun_cashflow_2",
+        "balance_2": "raw_fun_balance_2",
         "fx": "raw_ts_fx",
         "quote": "raw_ts_quote",
         "quote_eps": "raw_ts_quote_eps"

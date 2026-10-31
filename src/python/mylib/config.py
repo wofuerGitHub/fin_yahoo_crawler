@@ -53,6 +53,8 @@ def load_config(path: str | Path = "config.json") -> dict[str, Any]:
             raise ValueError(f"Configuration value 'yahoo.database.{key}' is required")
     if not isinstance(database["tables"], dict):
         raise ValueError("'yahoo.database.tables' must be an object")
+    for kind in ("income", "balance", "cashflow"):
+        database["tables"].setdefault(f"{kind}_2", f"raw_fun_{kind}_2")
     for key, table in database["tables"].items():
         database["tables"][key] = validate_identifier(table)
     for key in ("reference_fx", "reference_map", "symbolslist", "companykeystats", "income", "cashflow", "balance", "fx", "quote", "quote_eps"):

@@ -24,6 +24,9 @@ def test_loads_fmp_style_config_and_expands_secret(tmp_path, monkeypatch):
     assert config["database"]["password"] == "fixture-secret"
     assert config["control"]["history_overlap_days"] == 30
     assert config["control"]["statement_frequency"] == "annual"
+    assert config["database"]["tables"]["income_2"] == "raw_fun_income_2"
+    assert config["database"]["tables"]["balance_2"] == "raw_fun_balance_2"
+    assert config["database"]["tables"]["cashflow_2"] == "raw_fun_cashflow_2"
 
 
 def test_missing_secret_fails_closed(tmp_path, monkeypatch):
