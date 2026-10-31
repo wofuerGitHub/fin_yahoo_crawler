@@ -1,11 +1,13 @@
 services:
   yahoo-worker:
+    image: fin-yahoo-crawler:0.1.0
     build:
       context: .
       dockerfile: dockerfile_worker
     command: ["python", "src/python/${WORKER:-update_timeserie.py}"]
     environment:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the environment}
+      MYSQL_HOST: ${MYSQL_HOST:-host.docker.internal}
     volumes:
       - ./runtime:/app/runtime
       - ./logs:/app/logs

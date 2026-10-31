@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any, Iterable
 
 from sqlalchemy import MetaData, Table, create_engine, inspect, select, update
@@ -20,7 +21,7 @@ class Database:
             "mysql+mysqlconnector",
             username=str(db["user"]),
             password=str(db["password"]),
-            host=str(db["host"]),
+            host=os.environ.get("MYSQL_HOST", str(db["host"])),
             port=int(db["port"]),
             database=self.schema,
         )

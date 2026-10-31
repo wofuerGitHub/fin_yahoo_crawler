@@ -153,5 +153,7 @@ def history_records(frame: pd.DataFrame, symbol: str, currency: str | None = Non
             destination = field_map.get(" ".join(str(source).lower().split()))
             if destination:
                 record[destination] = clean_value(value)
-        output.append({key: value for key, value in record.items() if value is not None})
+        record = {key: value for key, value in record.items() if value is not None}
+        if record.get("close") is not None:
+            output.append(record)
     return output

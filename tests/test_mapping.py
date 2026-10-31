@@ -22,3 +22,18 @@ def test_price_mapping_keeps_unadjusted_and_fx_orientation():
     assert equity["volume"] == 0
     assert fx["symbol"] == "USD"
     assert fx["currency"] == "EUR"
+
+
+def test_price_mapping_skips_only_rows_without_close():
+    frame = pd.DataFrame(
+        {"Open": [10.0, 11.0, 12.0], "Close": [10.5, float("nan"), 12.5]},
+        index=pd.date_range("2024-01-02", periods=3),
+    )
+
+    records = history_records(frame, "ABC", currency="USD")
+
+    assert [record["date"] for record in records] == [
+        pd.Timestamp("2024-01-02").date(),
+        pd.Timestamp("2024-01-04").date(),
+    ]
+    assert [record["close"] for record in records] == [10.5, 12.5]
