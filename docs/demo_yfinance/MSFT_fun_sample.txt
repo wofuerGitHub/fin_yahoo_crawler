@@ -1,0 +1,141 @@
+--- Fetching fundamental data for MSFT ---
+
+===================================================
+               BALANCE SHEET (BS)
+===================================================
+                                                    2026-06-30  ...  2022-06-30
+Ordinary Shares Number                            7.428435e+09  ...         NaN
+Share Issued                                      7.428435e+09  ...         NaN
+Net Debt                                          1.935900e+10  ...         NaN
+Total Debt                                        5.682600e+10  ...         NaN
+Tangible Book Value                               3.041270e+11  ...         NaN
+...                                                        ...  ...         ...
+Cash Cash Equivalents And Short Term Investments  7.665100e+10  ...         NaN
+Other Short Term Investments                      5.571600e+10  ...         NaN
+Cash And Cash Equivalents                         2.093500e+10  ...         NaN
+Cash Equivalents                                  7.876000e+09  ...         NaN
+Cash Financial                                    1.305900e+10  ...         NaN
+
+[79 rows x 5 columns]
+
+===================================================
+             INCOME STATEMENT (IS)
+===================================================
+                                                      2026-06-30  ...    2023-06-30
+Tax Effect Of Unusual Items                         1.110650e+09  ... -2.850000e+06
+Tax Rate For Calcs                                  1.940000e-01  ...  1.900000e-01
+Normalized EBITDA                                   2.017940e+11  ...  1.051550e+11
+Total Unusual Items                                 5.725000e+09  ... -1.500000e+07
+Total Unusual Items Excluding Goodwill              5.725000e+09  ... -1.500000e+07
+Net Income From Continuing Operation Net Minori...  1.337490e+11  ...  7.236100e+10
+Reconciled Depreciation                             3.853400e+10  ...  1.386100e+10
+Reconciled Cost Of Revenue                          1.063740e+11  ...  6.586300e+10
+EBITDA                                              2.075190e+11  ...  1.051400e+11
+EBIT                                                1.689850e+11  ...  9.127900e+10
+Net Interest Income                                 2.500000e+08  ...  1.026000e+09
+Interest Expense                                    3.051000e+09  ...  1.968000e+09
+Interest Income                                     3.301000e+09  ...  2.994000e+09
+Normalized Income                                   1.291346e+11  ...  7.237315e+10
+Net Income From Continuing And Discontinued Ope...  1.337490e+11  ...  7.236100e+10
+Total Expenses                                      1.766020e+11  ...  1.233920e+11
+Total Operating Income As Reported                  1.552370e+11  ...  8.852300e+10
+Diluted Average Shares                              7.453000e+09  ...  7.472000e+09
+Basic Average Shares                                7.429000e+09  ...  7.446000e+09
+Diluted EPS                                         1.795000e+01  ...  9.680000e+00
+Basic EPS                                           1.800000e+01  ...  9.720000e+00
+Diluted NI Availto Com Stockholders                 1.337490e+11  ...  7.236100e+10
+Net Income Common Stockholders                      1.337490e+11  ...  7.236100e+10
+Net Income                                          1.337490e+11  ...  7.236100e+10
+Net Income Including Noncontrolling Interests       1.337490e+11  ...  7.236100e+10
+Net Income Continuous Operations                    1.337490e+11  ...  7.236100e+10
+Tax Provision                                       3.218500e+10  ...  1.695000e+10
+Pretax Income                                       1.659340e+11  ...  8.931100e+10
+Other Income Expense                                1.044700e+10  ... -2.380000e+08
+Other Non Operating Income Expenses                 4.722000e+09  ... -2.230000e+08
+Special Income Charges                             -1.780000e+08  ... -3.000000e+07
+Write Off                                           1.780000e+08  ...  3.000000e+07
+Gain On Sale Of Security                            5.903000e+09  ...  1.500000e+07
+Net Non Operating Interest Income Expense           2.500000e+08  ...  1.026000e+09
+Interest Expense Non Operating                      3.051000e+09  ...  1.968000e+09
+Interest Income Non Operating                       3.301000e+09  ...  2.994000e+09
+Operating Income                                    1.552370e+11  ...  8.852300e+10
+Operating Expense                                   7.022800e+10  ...  5.752900e+10
+Research And Development                            3.556200e+10  ...  2.719500e+10
+Selling General And Administration                  3.466600e+10  ...  3.033400e+10
+Selling And Marketing Expense                       2.671000e+10  ...  2.275900e+10
+General And Administrative Expense                  7.956000e+09  ...  7.575000e+09
+Other Gand A                                        7.956000e+09  ...  7.575000e+09
+Gross Profit                                        2.254650e+11  ...  1.460520e+11
+Cost Of Revenue                                     1.063740e+11  ...  6.586300e+10
+Total Revenue                                       3.318390e+11  ...  2.119150e+11
+Operating Revenue                                   3.318390e+11  ...  2.119150e+11
+
+[47 rows x 4 columns]
+
+===================================================
+             CASH FLOW STATEMENT (CF)
+===================================================
+                                                  2026-06-30  ...   2022-06-30
+Free Cash Flow                                  6.698700e+10  ...          NaN
+Repurchase Of Capital Stock                    -2.227100e+10  ...          NaN
+Repayment Of Debt                              -3.000000e+09  ...          NaN
+Issuance Of Debt                                0.000000e+00  ...          NaN
+Issuance Of Capital Stock                       2.009000e+09  ...          NaN
+Capital Expenditure                            -1.159480e+11  ...          NaN
+End Cash Position                               2.093500e+10  ...          NaN
+Beginning Cash Position                         3.024200e+10  ...          NaN
+Effect Of Exchange Rate Changes                -1.960000e+08  ...          NaN
+Changes In Cash                                -9.111000e+09  ...          NaN
+Financing Cash Flow                            -5.254600e+10  ...          NaN
+Cash Flow From Continuing Financing Activities -5.254600e+10  ...          NaN
+Net Other Financing Charges                    -2.839000e+09  ...          NaN
+Cash Dividends Paid                            -2.644500e+10  ...          NaN
+Common Stock Dividend Paid                     -2.644500e+10  ...          NaN
+Net Common Stock Issuance                      -2.026200e+10  ...          NaN
+Common Stock Payments                          -2.227100e+10  ...          NaN
+Common Stock Issuance                           2.009000e+09  ...          NaN
+Net Issuance Payments Of Debt                  -3.000000e+09  ...          NaN
+Net Short Term Debt Issuance                    0.000000e+00  ...          NaN
+Short Term Debt Issuance                                 NaN  ...          0.0
+Net Long Term Debt Issuance                    -3.000000e+09  ...          NaN
+Long Term Debt Payments                        -3.000000e+09  ...          NaN
+Long Term Debt Issuance                         0.000000e+00  ...          NaN
+Investing Cash Flow                            -1.395000e+11  ...          NaN
+Cash Flow From Continuing Investing Activities -1.395000e+11  ...          NaN
+Net Other Investing Changes                    -1.986100e+10  ...          NaN
+Net Investment Purchase And Sale               -1.948000e+09  ...          NaN
+Sale Of Investment                              5.640300e+10  ...          NaN
+Purchase Of Investment                         -5.835100e+10  ...          NaN
+Net Business Purchase And Sale                 -1.743000e+09  ...          NaN
+Purchase Of Business                           -1.743000e+09  ...          NaN
+Net PPE Purchase And Sale                      -1.159480e+11  ...          NaN
+Purchase Of PPE                                -1.159480e+11  ...          NaN
+Operating Cash Flow                             1.829350e+11  ...          NaN
+Cash Flow From Continuing Operating Activities  1.829350e+11  ...          NaN
+Change In Working Capital                      -4.895000e+09  ...          NaN
+Change In Other Working Capital                 7.486000e+09  ...          NaN
+Change In Other Current Liabilities             2.140000e+09  ...          NaN
+Change In Other Current Assets                 -6.591000e+09  ...          NaN
+Change In Payables And Accrued Expense          5.268000e+09  ...          NaN
+Change In Payable                               5.268000e+09  ...          NaN
+Change In Account Payable                       5.268000e+09  ...          NaN
+Change In Tax Payable                                    NaN  ...  696000000.0
+Change In Income Tax Payable                             NaN  ...  696000000.0
+Change In Inventory                            -4.610000e+08  ...          NaN
+Change In Receivables                          -1.273700e+10  ...          NaN
+Changes In Account Receivables                 -1.273700e+10  ...          NaN
+Stock Based Compensation                        1.240500e+10  ...          NaN
+Unrealized Gain Loss On Investment Securities            NaN  ... -509000000.0
+Asset Impairment Charge                                  NaN  ...  101000000.0
+Deferred Tax                                    1.418900e+10  ...          NaN
+Deferred Income Tax                             1.418900e+10  ...          NaN
+Depreciation Amortization Depletion             3.853400e+10  ...          NaN
+Depreciation And Amortization                   3.853400e+10  ...          NaN
+Depreciation                                    3.853400e+10  ...          NaN
+Operating Gains Losses                         -1.104700e+10  ...          NaN
+Gain Loss On Investment Securities                       NaN  ...   -1000000.0
+Net Income From Continuing Operations           1.337490e+11  ...          NaN
+
+[59 rows x 5 columns]
+
+--- Fundamental data demonstration complete ---
