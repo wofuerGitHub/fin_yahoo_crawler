@@ -2,9 +2,9 @@
   "yahoo": {
     "database": {
       "host": "127.0.0.1",
-      "port": "3309",
-      "schema": "fmp",
-      "user": "fmp",
+      "port": "3311",
+      "schema": "yahoo",
+      "user": "root",
       "password": "${MYSQL_PASSWORD}",
       "tables": {
         "reference_fx": "_reference_fx",

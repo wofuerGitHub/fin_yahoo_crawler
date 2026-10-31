@@ -226,18 +226,24 @@ are separate database deployment tasks.
 
 ## Tests and deployment
 
-Run offline fixture tests with:
+Run the complete test suite, including the isolated MySQL integration test,
+with:
 
 ```powershell
-python -m pytest
+python run_tests.py
 ```
 
-The tests cover config/environment handling, source mappings, worker selection,
-throttle concurrency/recovery, and retry/cooldown behavior. An opt-in MySQL
-integration test creates and removes a uniquely named fixture table. Set
-`MYSQL_TEST_URL` only to a dedicated test database whose schema name starts
-with `test_`; it refuses other schema names. Live Yahoo smoke tests are
-separate and cannot prove universal field completeness or safe request quotas.
+Create `.env` from `.env.example` and set `MYSQL_PASSWORD` first. The runner
+loads that local file, builds `MYSQL_TEST_URL` using the host, port, and username
+from `config.json`, and defaults to the `test_yahoo` schema. Set
+`MYSQL_TEST_SCHEMA` to a different dedicated test schema if needed; the runner
+and integration test both reject schema names that do not start with `test_`.
+The integration test creates and removes a uniquely named fixture table.
+
+The suite also covers config/environment handling, source mappings, worker
+selection, throttle concurrency/recovery, and retry/cooldown behavior. Live
+Yahoo smoke tests remain opt-in with `RUN_YAHOO_INTEGRATION=1` and are not
+required for the test suite.
 
 Docker Compose runs one worker per container invocation. Set `MYSQL_PASSWORD`
 in the environment and run, for example:

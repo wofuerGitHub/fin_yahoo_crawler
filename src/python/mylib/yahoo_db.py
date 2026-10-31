@@ -89,6 +89,11 @@ class Database:
                 }
                 if updates:
                     statement = statement.on_duplicate_key_update(**updates)
+                else:
+                    key_column = sorted(unique_columns)[0]
+                    statement = statement.on_duplicate_key_update(
+                        {key_column: statement.inserted[key_column]}
+                    )
                 connection.execute(statement)
                 written += 1
         return written

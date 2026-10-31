@@ -29,6 +29,7 @@ runtime/*
 # Environment / secrets
 .env
 .env.*
+!.env.example
 
 # Local config overrides
 config/config.local.json
@@ -39,4 +40,3 @@ config/config.secret.json
 *.tmp
 
 # Runtime generated files
-
