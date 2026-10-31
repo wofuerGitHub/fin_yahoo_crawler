@@ -1,0 +1,12 @@
+services:
+  yahoo-worker:
+    build:
+      context: .
+      dockerfile: dockerfile_worker
+    command: ["python", "src/python/${WORKER:-update_timeserie.py}"]
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the environment}
+    volumes:
+      - ./runtime:/app/runtime
+      - ./logs:/app/logs
+    restart: unless-stopped

@@ -1,0 +1,45 @@
+{
+  "yahoo": {
+    "database": {
+      "host": "127.0.0.1",
+      "port": "3309",
+      "schema": "fmp",
+      "user": "fmp",
+      "password": "${MYSQL_PASSWORD}",
+      "tables": {
+        "reference_fx": "_reference_fx",
+        "reference_map": "_reference_map",
+        "symbolslist": "raw_assetslist",
+        "companykeystats": "raw_companykeystats",
+        "income": "raw_fun_income",
+        "cashflow": "raw_fun_cashflow",
+        "balance": "raw_fun_balance",
+        "fx": "raw_ts_fx",
+        "quote": "raw_ts_quote",
+        "quote_eps": "raw_ts_quote_eps"
+      }
+    },
+    "connection": {
+      "speed": 10,
+      "timeout_seconds": 20,
+      "max_attempts": 3,
+      "cooldown_seconds_on_rate_limit": 300
+    },
+    "file": {
+      "log": "./logs/yahoo_crawler.log",
+      "debug": "./logs/yahoo_debug.log",
+      "speed_control": "./runtime/yahoo_speed.json"
+    },
+    "control": {
+      "update_companykeystats_delay": 0.0,
+      "update_statement_delay": 0.0,
+      "update_statement_all": false,
+      "update_stream_delay": 3600.0,
+      "update_symbolslist_delay": 43200.0,
+      "update_timeserie_delay": 10800.0,
+      "history_overlap_days": 30,
+      "statement_frequency": "annual"
+    },
+    "debug": false
+  }
+}
