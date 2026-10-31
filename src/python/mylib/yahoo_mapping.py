@@ -103,6 +103,8 @@ def statement_records(frame: pd.DataFrame, kind: str, symbol: str, currency: str
             "period": "FY",
             "reportedCurrency": currency,
         }
+        if record["date"] is not None:
+            record["calendarYear"] = str(record["date"].year)
         for source_label, value in frame[period_end].items():
             normalized = " ".join(str(source_label).replace("_", " ").lower().split())
             destination = labels.get(normalized)

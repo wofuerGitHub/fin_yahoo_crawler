@@ -83,8 +83,10 @@ with an error; the application does not guess the schema or make migrations.
   `revenue`, `Net Income` to `netIncome`, `Total Assets` to `totalAssets`, and
   `Operating Cash Flow` to `operatingCashFlow`. Period dates are source period
   ends, and the mapper labels these annual records `FY`. `reportedCurrency` is
-  taken from the profile table when available; the crawler does not infer it
-  from the instrument's trading currency. Quarterly ingestion is disabled
+  taken from the profile table when available, otherwise from Yahoo's
+  `financialCurrency`; the crawler does not infer it
+  from the instrument's trading currency. `calendarYear` is the year of the
+  period-end date (required by the `raw_fun` triggers). Quarterly ingestion is disabled
   until the destination uniqueness contract is reviewed.
 - **Equity history:** daily `Open`, `High`, `Low`, `Close`, `Adj Close`,
   `Volume`, `Dividends`, and `Stock Splits` are mapped when present. History is

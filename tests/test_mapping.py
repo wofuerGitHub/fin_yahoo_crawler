@@ -8,7 +8,7 @@ def test_statement_mapping_preserves_zero_negative_and_missing_currency():
 
     records = statement_records(frame, "income", "ABC")
 
-    assert records == [{"symbol": "ABC", "date": pd.Timestamp("2024-12-31").date(), "period": "FY", "revenue": 0, "netIncome": -12}]
+    assert records == [{"symbol": "ABC", "date": pd.Timestamp("2024-12-31").date(), "period": "FY", "calendarYear": "2024", "revenue": 0, "netIncome": -12}]
 
 
 def test_price_mapping_keeps_unadjusted_and_fx_orientation():

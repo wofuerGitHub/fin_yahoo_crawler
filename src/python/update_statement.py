@@ -23,6 +23,12 @@ def update(config, logger, throttle, service, database, worker_args):
                 logger.info("No %s statement data for %s (%s)", kind, symbol, result.status)
                 continue
             currency = profiles.get(symbol, {}).get("reportedCurrency")
+            if not currency:
+                info = fetch(lambda: service.profile(symbol), config, logger, throttle)
+                currency = info.data.get("financialCurrency") if info.status == "success" else None
+            if not currency:
+                logger.warning("No reported currency for %s; skipping %s statement", symbol, kind)
+                continue
             records = statement_records(result.data, kind, symbol, currency)
             logger.info("%s %s: stored %s raw annual rows", kind, symbol, database.upsert(TABLES[kind], records))
         except Exception:

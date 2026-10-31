@@ -1,6 +1,6 @@
 services:
   yahoo-worker:
-    image: fin-yahoo-crawler:0.1.1
+    image: fin-yahoo-crawler:0.1.2
     build:
       context: .
       dockerfile: dockerfile_worker
@@ -13,11 +13,24 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
   yahoo-stream:
-    image: fin-yahoo-crawler:0.1.1
+    image: fin-yahoo-crawler:0.1.2
     build:
       context: .
       dockerfile: dockerfile_worker
     command: ["python", "src/python/update_stream.py"]
+    environment:
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the environment}
+      MYSQL_HOST: ${MYSQL_HOST:-host.docker.internal}
+    volumes:
+      - ./runtime:/app/runtime
+      - ./logs:/app/logs
+    restart: unless-stopped
+  yahoo-statement:
+    image: fin-yahoo-crawler:0.1.2
+    build:
+      context: .
+      dockerfile: dockerfile_worker
+    command: ["sh", "-c", "while true; do for k in income balance cashflow; do python src/python/update_statement.py $$k --once; done; sleep 86400; done"]
     environment:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the environment}
       MYSQL_HOST: ${MYSQL_HOST:-host.docker.internal}
