@@ -43,6 +43,21 @@ class YahooService:
         except Exception as error:
             return FetchResult("retryable_error" if self.is_retryable(error) else "permanent_error", error=error)
 
+    def raw_statement(self, symbol: str, kind: str, period_type: str) -> FetchResult:
+        """Return every available metric with Yahoo's unformatted field names."""
+        methods = {"income": "get_income_stmt", "balance": "get_balance_sheet", "cashflow": "get_cash_flow"}
+        frequencies = {"annual": "yearly", "quarterly": "quarterly"}
+        if kind not in methods:
+            raise ValueError(f"Unsupported statement kind: {kind}")
+        if period_type not in frequencies:
+            raise ValueError(f"Unsupported statement period: {period_type}")
+        try:
+            ticker = yf.Ticker(symbol)
+            frame = getattr(ticker, methods[kind])(freq=frequencies[period_type], pretty=False)
+            return self._result(frame)
+        except Exception as error:
+            return FetchResult("retryable_error" if self.is_retryable(error) else "permanent_error", error=error)
+
     def history(self, symbol: str, start: str | None = None, end: str | None = None) -> FetchResult:
         try:
             ticker = yf.Ticker(symbol)

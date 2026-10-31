@@ -61,6 +61,9 @@ FMP raw table contract:
 | `income` | `raw_fun_income` | Annual income-statement source values |
 | `cashflow` | `raw_fun_cashflow` | Annual cash-flow source values |
 | `balance` | `raw_fun_balance` | Annual balance-sheet source values |
+| `income_2` | `raw_fun_income_2` | Annual/quarterly income metrics, one metric per row |
+| `cashflow_2` | `raw_fun_cashflow_2` | Annual/quarterly cash-flow metrics, one metric per row |
+| `balance_2` | `raw_fun_balance_2` | Annual/quarterly balance-sheet metrics, one metric per row |
 | `quote` | `raw_ts_quote` | Daily equity history |
 | `fx` | `raw_ts_fx` | Raw Yahoo FX observations |
 | `quote_eps` | `raw_ts_quote_eps` | Periodic quote snapshot and source EPS when available |
@@ -82,12 +85,14 @@ with an error; the application does not guess the schema or make migrations.
   using explicit source-label mappings. Examples include `Total Revenue` to
   `revenue`, `Net Income` to `netIncome`, `Total Assets` to `totalAssets`, and
   `Operating Cash Flow` to `operatingCashFlow`. Period dates are source period
-  ends, and the mapper labels these annual records `FY`. `reportedCurrency` is
+  ends, and the legacy mapper labels these annual records `FY`. `reportedCurrency` is
   taken from the profile table when available, otherwise from Yahoo's
   `financialCurrency`; the crawler does not infer it
   from the instrument's trading currency. `calendarYear` is the year of the
-  period-end date (required by the `raw_fun` triggers). Quarterly ingestion is disabled
-  until the destination uniqueness contract is reviewed.
+  period-end date (required by the `raw_fun` triggers). Quarterly ingestion into
+  these legacy wide tables is disabled until their uniqueness contract is reviewed.
+  The separate `update_statement_2.py` worker described below stores all available
+  source metrics in the prepared row-per-metric tables, including quarterly data.
 - **Equity history:** daily `Open`, `High`, `Low`, `Close`, `Adj Close`,
   `Volume`, `Dividends`, and `Stock Splits` are mapped when present. History is
   requested with `auto_adjust=False`; prices remain in source trading units.
@@ -165,6 +170,53 @@ python src/python/update_timeserie.py [--once] [--config PATH]
 python src/python/update_stream.py [--once] [--config PATH]
 ```
 
+### Full statements: one metric per row
+
+`update_statement_2.py` writes to the three prepared `_2` tables. By default it
+fetches income, balance, and cash-flow statements for **both annual and quarterly**
+periods, across all history returned by the pinned `yfinance` version. It uses
+the same symbol selection, shared throttle, retries, logging, database settings,
+and `update_statement_delay` as the original worker.
+
+```text
+python src/python/update_statement_2.py --once
+python src/python/update_statement_2.py income --period-type annual --once
+python src/python/update_statement_2.py balance --period-type quarterly --once
+python src/python/update_statement_2.py cashflow --once --config config/config.local.json
+```
+
+The optional positional argument is `income`, `balance`, `cashflow`, or `all`
+(default). `--period-type` accepts `annual`, `quarterly`, or `all` (default).
+Keep the legacy `control.statement_frequency` setting at `annual`; this new
+worker's period selection is independent because its destination keys explicitly
+distinguish periods. Without `--once`, it repeats after `update_statement_delay`;
+set a suitable nonzero delay for continuous use.
+
+Each statement cell produces a row containing `symbol`, `period_type`,
+`report_date`, `metric`, `value`, `currency`, and `fetched_at`. Yahoo's raw metric
+names are returned using `pretty=False` and stored unchanged (for example,
+`TotalRevenue`, `BasicEPS`, or `OperatingCashFlow`), with no field whitelist or
+mapping to FMP names. Newly returned metrics are included automatically.
+The worker preserves zero and negative values and writes unavailable/non-finite
+values as SQL `NULL`. MySQL's `DECIMAL(30,6)` defines the stored numeric precision.
+The reporting currency comes from `companykeystats.reportedCurrency`, falling
+back to Yahoo's `financialCurrency`; if unavailable, it remains `NULL` without
+discarding statement values. Currency is statement metadata, not an assertion
+that every metric (such as share counts) is a monetary amount.
+
+The `income_2`, `balance_2`, and `cashflow_2` table mappings are configurable under
+`yahoo.database.tables` and default to `raw_fun_income_2`, `raw_fun_balance_2`,
+and `raw_fun_cashflow_2` when absent in older configs. These tables must already
+exist with the prepared schema: an auto-increment `id`, the columns above, and a
+unique key on `(symbol, period_type, report_date, metric)`. Repeated runs update
+the existing metric row and refresh `fetched_at`; unavailable values never
+replace existing non-NULL observations. No metrics are deleted, and the worker
+does not create or modify tables or write to the legacy wide statement tables.
+
+Only history and metrics actually exposed by `yfinance` can be ingested; this
+does not recover unavailable Yahoo history. Trailing/TTM data is excluded because
+the prepared `period_type` enum only supports annual and quarterly observations.
+
 Reference-table behavior follows the FMP conventions:
 
 - `_reference_map.symbol` selects equity history and quote polling.
@@ -209,9 +261,10 @@ Inspect the actual target database before ingestion. Confirm:
 
 1. The configured raw and reference tables, columns, required fields, unique
    keys, generated columns, triggers, routines, and scheduled events exist.
-2. Statement keys distinguish the intended annual periods and currencies.
-   Do not enable quarterly ingestion until its uniqueness and downstream use
-   have been reviewed.
+2. Legacy statement keys distinguish the intended annual periods and currencies.
+   Do not enable quarterly ingestion into the legacy wide tables until their
+   uniqueness and downstream use have been reviewed. The `_2` tables distinguish
+   annual and quarterly observations using `period_type` in their unique keys.
 3. `raw_ts_fx` expects the observed Yahoo pair direction and the same `symbol`,
    `currency`, date, and rate conventions used by the downstream SQL. The
    intended `EURXXX` quote is units of `XXX` per EUR, but must be verified.
@@ -267,7 +320,7 @@ not a crawler installer or launcher.
   guaranteed real-time quotes are not promised.
 - The implementation does not calculate EUR values, EPS/DPS/CPS/BPS, P/E,
   P/B, ratios, signals, DCF models, or synthetic history.
-- Quarterly statements, a competing schema, schema migrations, a generic job
+- Quarterly statements in the legacy wide tables, schema migrations, a generic job
   framework, multi-host file locking, and a second Python financial engine are
   outside the current implementation.
 - Validate applicable Yahoo Finance terms and access rights before use or
