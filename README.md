@@ -13,7 +13,8 @@ guaranteed replacement for every FMP field or feed.
 
 ## Scope and data ownership
 
-The crawler is a raw-data ingester. It may parse dates, map labels, cast values,
+The Yahoo crawler workers are raw-data ingesters. The separate, opt-in
+`fundamental_worker.py` ETL described below derives configured metrics locally. It may parse dates, map labels, cast values,
 replace `NaN` with SQL `NULL`, and retain source currencies and units. It does
 not convert currencies, compute per-share measures or ratios, or write SQL-owned
 derived datasets.
@@ -25,7 +26,7 @@ derived datasets.
 | Currency conversion, EPS/DPS/CPS/BPS calculations, ratios, aggregations | Existing MySQL logic |
 | `raw_fun`, `eur_*`, analytical views and downstream models | Existing MySQL logic |
 
-The crawler never writes `raw_fun`, `eur_fun`, `eur_ts_quote`, or other derived
+The Yahoo ingestion workers never write `raw_fun`, `eur_fun`, `eur_ts_quote`, or other derived
 datasets. It does not install or modify tables, triggers, routines, events, or
 views. Do not duplicate database calculations in Python to work around SQL
 behavior.
@@ -312,13 +313,75 @@ Replace the script path for another worker. The Compose service mounts
 shared among workers on the same host. `init.sh` is a workspace setup script,
 not a crawler installer or launcher.
 
+## Configurable fundamental ETL
+
+`fundamental_worker.py` reads `income_2`, `balance_2`, and `cashflow_2` and
+writes one wide row per `(symbol, period_type, report_date)` to the configured
+`database.tables.fun` (default `raw_fun_2`). It makes no Yahoo requests and does
+not use reference-table selectors. Each run recomputes all groups present in
+any source table. Source rows are currently read into memory.
+
+```text
+python src/python/fundamental_worker.py --once --config config.json
+```
+
+Without `--once`, it repeats after `control.fundamental_delay` (default 3600
+seconds). A failed one-shot run exits with an error. Tables must already exist;
+the worker never creates or migrates a schema.
+
+Define formulas under `yahoo.fundamental.transformations`:
+
+```json
+{
+  "fundamental.grossProfitRatio": "income.GrossProfit / income.TotalRevenue",
+  "fundamental.cps": "cashflow.OperatingCashFlow / income.DilutedAverageShares",
+  "fundamental.complex": "(abs(income.GrossProfit))^2"
+}
+```
+
+The optional `fundamental.` output prefix is removed to obtain the column name.
+Source namespaces are `income`, `balance`, and `cashflow`; metric names are
+case sensitive. Expressions support numeric constants, parentheses, unary signs,
+`+`, `-`, `*`, `/`, `^` (or `**`) and `abs()`. Powers bind before unary signs;
+exponents are limited to magnitude 100. Arbitrary Python execution and references
+to other output formulas are rejected. Decimal arithmetic uses 38-digit precision;
+the destination column controls stored precision.
+
+Inputs are matched only within the exact three-part group. Missing or non-finite
+inputs, division by zero, and invalid numeric results produce SQL `NULL`.
+Unlike raw ingestion, this ETL **overwrites old calculated values with NULL**
+when they can no longer be calculated. Duplicate source metrics within one group
+fail the run. Rows absent from all source tables are not deleted from `fun`.
+
+For the supplied example configuration, an illustrative destination schema is:
+
+```sql
+CREATE TABLE raw_fun_2 (
+  symbol VARCHAR(32) NOT NULL,
+  period_type ENUM('annual','quarterly') NOT NULL,
+  report_date DATE NOT NULL,
+  grossProfitRatio DECIMAL(30,6) NULL,
+  cps DECIMAL(30,6) NULL,
+  complex DECIMAL(65,6) NULL,
+  PRIMARY KEY (symbol, period_type, report_date)
+);
+```
+
+Create or review this table separately before running the worker. Every configured
+output column must exist. A unique key on exactly the three grouping columns is
+required; other unique keys must not allow distinct groups to collide. An optional
+auto-increment primary-key ID is supported. Use case-sensitive symbol collation
+if your universe distinguishes symbol casing. All output writes in a run use
+one transaction; no currency conversions are performed. Keep source currencies
+and units compatible when defining cross-statement calculations.
+
 ## Known limitations and non-goals
 
 - Yahoo fields, history depth, revisions, availability, symbol coverage, and
   rate-limit behavior vary. No complete FMP/Yahoo parity is claimed.
 - A complete Yahoo stock/ETF universe, five years of statements, and
   guaranteed real-time quotes are not promised.
-- The implementation does not calculate EUR values, EPS/DPS/CPS/BPS, P/E,
+- The Yahoo ingestion workers do not calculate EUR values, EPS/DPS/CPS/BPS, P/E,
   P/B, ratios, signals, DCF models, or synthetic history.
 - Quarterly statements in the legacy wide tables, schema migrations, a generic job
   framework, multi-host file locking, and a second Python financial engine are
