@@ -45,10 +45,10 @@
       "statement_frequency": "annual",
       "fundamental_delay": 3600
     },
-    "debug": false,
+    "debug": true,
     "fundamental": {
       "transformations": {
-        "fundamental.grossProfitRatio": "income.GrossProfit / income.TotalRevenue",
+        "fundamental.grossProfitRatio": "coalesce(income.GrossProfit / income.TotalRevenue, (income.TotalRevenue - income.TotalExpenses + income.SellingGeneralAndAdministration + income.OtherOperatingExpenses) / income.TotalRevenue)",
         "fundamental.cps": "cashflow.OperatingCashFlow / income.DilutedAverageShares"
       }
     }
