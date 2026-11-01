@@ -46,6 +46,36 @@ def test_zero_and_decimal_precision():
     assert Formula('2+3*4^2').evaluate({}) == 50
 
 
+@pytest.mark.parametrize('value,expected', [(None, 7), (0, 0), (-2, -2),
+                                           ('NaN', 7), ('Infinity', 7)])
+def test_coalesce_returns_first_non_null_value(value, expected):
+    assert Formula('coalesce(income.A, balance.B)').evaluate(
+        {'income': {'A': value}, 'balance': {'B': 7}}) == expected
+
+
+def test_coalesce_missing_nested_and_arithmetic():
+    assert Formula('coalesce(income.A, cashflow.B)').evaluate({}) is None
+    assert Formula('2 * coalesce(income.A, coalesce(balance.B, 3))').evaluate({}) == 6
+    assert Formula('coalesce(1/0, income.A, 4)').evaluate({}) == 4
+    assert Formula('coalesce(5, 1/0)').evaluate({}) == 5
+    assert Formula('abs(coalesce(income.A, -3))').evaluate({}) == 3
+
+
+@pytest.mark.parametrize('expression', ['coalesce()', 'coalesce(1)',
+                                      'coalesce(1, b=2)', 'coalesce(1, __import__("os"))',
+                                      'coalesce(*income.A)'])
+def test_coalesce_rejects_invalid_arguments(expression):
+    with pytest.raises(ValueError):
+        Formula(expression)
+
+
+def test_coalesce_cannot_borrow_from_another_group():
+    records = transform({'income': [row('A', 2), row('B', 8, currency='USD')],
+                         'balance': [], 'cashflow': []},
+                        {'value': Formula('coalesce(income.A, income.B)')})
+    assert {r['currency']: r['value'] for r in records} == {'EUR': 2, 'USD': 8}
+
+
 def test_duplicate_metric_is_rejected():
     with pytest.raises(ValueError, match='Duplicate'):
         transform({'income': [row('A', 1), row('A', 2)], 'balance': [], 'cashflow': []}, {'x': Formula('income.A')})
