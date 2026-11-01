@@ -49,8 +49,7 @@
     "fundamental": {
       "transformations": {
         "fundamental.grossProfitRatio": "income.GrossProfit / income.TotalRevenue",
-        "fundamental.cps": "cashflow.OperatingCashFlow / income.DilutedAverageShares",
-        "fundamental.complex": "(abs(income.GrossProfit))^2"
+        "fundamental.cps": "cashflow.OperatingCashFlow / income.DilutedAverageShares"
       }
     }
   }
