@@ -16,7 +16,7 @@ from mylib.config import load_config, validate_identifier
 from mylib.write_log import create_logger
 from mylib.yahoo_db import Database
 
-KEY = ("symbol", "period_type", "report_date")
+KEY = ("symbol", "period_type", "report_date", "currency")
 SOURCES = ("income", "balance", "cashflow")
 OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul,
        ast.Div: operator.truediv, ast.Pow: operator.pow}
@@ -100,14 +100,16 @@ def transform(source_rows, formulas):
     for source in SOURCES:
         for row in source_rows[source]:
             key = tuple(row[name] for name in KEY)
-            symbol, period, report_date = key
+            symbol, period, report_date, currency = key
             if isinstance(report_date, datetime):
                 report_date = report_date.date()
             elif isinstance(report_date, str):
                 report_date = date.fromisoformat(report_date)
             if not symbol or period not in ("annual", "quarterly") or not isinstance(report_date, date):
                 raise ValueError(f"Invalid statement group: {key}")
-            key = symbol, period, report_date
+            if not isinstance(currency, str) or not currency.strip():
+                raise ValueError(f"Missing currency in statement group: {key}")
+            key = symbol, period, report_date, currency
             metrics = groups.setdefault(key, {}).setdefault(source, {})
             if row["metric"] in metrics:
                 raise ValueError(f"Duplicate {source} metric in group {key}: {row['metric']}")
@@ -122,9 +124,11 @@ def update(config, database):
     required = set(KEY) | set(formulas)
     if not required.issubset(table.c.keys()):
         raise ValueError(f"Destination is missing columns: {sorted(required - set(table.c.keys()))}")
+    if table.c.currency.nullable:
+        raise ValueError("Destination currency must be NOT NULL to guarantee unique groups")
     keys = database._unique_candidates(table)
     if set(KEY) not in keys:
-        raise ValueError("Destination requires UNIQUE(symbol, period_type, report_date)")
+        raise ValueError("Destination requires UNIQUE(symbol, period_type, report_date, currency)")
     # Other uniqueness rules must not cause two different groups to collide.
     for key in keys:
         if not set(KEY).issubset(key) and not (

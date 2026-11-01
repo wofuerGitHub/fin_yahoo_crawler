@@ -316,7 +316,7 @@ not a crawler installer or launcher.
 ## Configurable fundamental ETL
 
 `fundamental_worker.py` reads `income_2`, `balance_2`, and `cashflow_2` and
-writes one wide row per `(symbol, period_type, report_date)` to the configured
+writes one wide row per `(symbol, period_type, report_date, currency)` to the configured
 `database.tables.fun` (default `raw_fun_2`). It makes no Yahoo requests and does
 not use reference-table selectors. Each run recomputes all groups present in
 any source table. Source rows are currently read into memory.
@@ -347,7 +347,9 @@ exponents are limited to magnitude 100. Arbitrary Python execution and reference
 to other output formulas are rejected. Decimal arithmetic uses 38-digit precision;
 the destination column controls stored precision.
 
-Inputs are matched only within the exact three-part group. Missing or non-finite
+Currency is always copied to the output `currency` column. Missing or blank source
+currencies fail the run; the destination currency column must be NOT NULL.
+Inputs are matched only within the exact four-part group. Missing or non-finite
 inputs, division by zero, and invalid numeric results produce SQL `NULL`.
 Unlike raw ingestion, this ETL **overwrites old calculated values with NULL**
 when they can no longer be calculated. Duplicate source metrics within one group
@@ -360,15 +362,16 @@ CREATE TABLE raw_fun_2 (
   symbol VARCHAR(32) NOT NULL,
   period_type ENUM('annual','quarterly') NOT NULL,
   report_date DATE NOT NULL,
+  currency VARCHAR(10) NOT NULL,
   grossProfitRatio DECIMAL(30,6) NULL,
   cps DECIMAL(30,6) NULL,
   complex DECIMAL(65,6) NULL,
-  PRIMARY KEY (symbol, period_type, report_date)
+  PRIMARY KEY (symbol, period_type, report_date, currency)
 );
 ```
 
 Create or review this table separately before running the worker. Every configured
-output column must exist. A unique key on exactly the three grouping columns is
+output column must exist. A unique key on exactly the four grouping columns is
 required; other unique keys must not allow distinct groups to collide. An optional
 auto-increment primary-key ID is supported. Use case-sensitive symbol collation
 if your universe distinguishes symbol casing. All output writes in a run use
