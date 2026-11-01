@@ -45,10 +45,13 @@ class Formula:
         elif isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
             self.validate(node.operand)
         elif (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
-              and node.func.id == "abs" and len(node.args) == 1 and not node.keywords):
-            self.validate(node.args[0])
+              and not node.keywords and (
+                  (node.func.id == "abs" and len(node.args) == 1)
+                  or (node.func.id == "coalesce" and len(node.args) >= 2))):
+            for argument in node.args:
+                self.validate(argument)
         else:
-            raise ValueError("Formula supports source.metric, numbers, + - * / ^ ** and abs() only")
+            raise ValueError("Formula supports source.metric, numbers, + - * / ^ **, abs() and coalesce(a, b, ...) only")
 
     def evaluate(self, sources):
         def visit(node):
@@ -66,6 +69,15 @@ class Formula:
                 value = visit(node.operand)
                 return -value if isinstance(node.op, ast.USub) else value
             if isinstance(node, ast.Call):
+                if node.func.id == "coalesce":
+                    for argument in node.args:
+                        try:
+                            value = visit(argument)
+                            if value.is_finite():
+                                return value
+                        except (LookupError, ArithmeticError, DecimalException, ValueError):
+                            continue
+                    raise LookupError("All coalesce arguments are NULL")
                 return abs(visit(node.args[0]))
             left, right = visit(node.left), visit(node.right)
             if isinstance(node.op, ast.Pow) and abs(right) > 100:

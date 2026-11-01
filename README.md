@@ -340,9 +340,16 @@ Define formulas under `yahoo.fundamental.transformations`:
 ```
 
 The optional `fundamental.` output prefix is removed to obtain the column name.
+`coalesce(a, b, ...)` returns the first non-NULL result, evaluating arguments
+from left to right. Zero and negative values are valid results. Missing metrics,
+non-finite values, and undefined arithmetic (such as division by zero) allow the
+next fallback; all-NULL arguments produce NULL. At least two arguments are required.
+For example, `coalesce(income.DilutedAverageShares, income.BasicAverageShares)`
+uses basic shares only when diluted shares are unavailable in the same group.
+
 Source namespaces are `income`, `balance`, and `cashflow`; metric names are
 case sensitive. Expressions support numeric constants, parentheses, unary signs,
-`+`, `-`, `*`, `/`, `^` (or `**`) and `abs()`. Powers bind before unary signs;
+`+`, `-`, `*`, `/`, `^` (or `**`) and `abs()` / `coalesce(a, b, ...)`. Powers bind before unary signs;
 exponents are limited to magnitude 100. Arbitrary Python execution and references
 to other output formulas are rejected. Decimal arithmetic uses 38-digit precision;
 the destination column controls stored precision.
